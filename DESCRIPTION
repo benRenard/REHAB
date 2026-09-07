@@ -1,0 +1,20 @@
+Package: REHAB
+Type: Package
+Title: Residual Heteroscedasticity, Autocorrelation and Bias
+Version: 0.1.0
+Authors@R: c(
+    person("Benjamin", "Renard", email = "benjamin.renard@inrae.fr",role = c("aut", "cre","cph"),comment = c(ORCID = "0000-0001-8447-5430")),
+    person("INRAE", role = c("fnd")),
+    person("Ministère de la Transition Ecologique - SCV", role = c("fnd")))
+Description: Description of model residuals (observed minus simulated) en terms of Heteroscedasticity, Autocorrelation and Bias.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+URL: https://github.com/BenRenard/REHAB
+BugReports: https://github.com/BenRenard/REHAB/issues
+Imports:
+    ggplot2,
+    patchwork,
+    dplyr,
+    mvtnorm
+RoxygenNote: 7.3.3
