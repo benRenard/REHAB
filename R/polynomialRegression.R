@@ -11,7 +11,7 @@
 #' @examples
 #' x=seq(-1,1,0.01)
 #' DF=StandardPolynomials(x,5)
-#' plot(NA,xlab='x',ylab='Hn(x)',xlim=range(x),ylim=range(DF))
+#' plot(NA,xlab='x',ylab='Pn(x)',xlim=range(x),ylim=range(DF))
 #' for(i in 1:NCOL(DF)){lines(x,DF[,i],col=i)}
 #' @export
 StandardPolynomials <- function(x,n=3){
@@ -85,7 +85,7 @@ LegendrePolynomials <- function(x,n=3){
 #' Polynomial Regression
 #'
 #' Fit a polynomial regression for the mean mu, the standard deviation sigma
-#' and the autocorrelation phi an AR(1) a Gaussian distribution
+#' and the autocorrelation phi of an AR(1) Gaussian distribution
 #'
 #' @param y numeric vector, predictand.
 #' @param x_mu numeric vector, matrix or data frame, predictors for the mean mu.
@@ -104,15 +104,16 @@ LegendrePolynomials <- function(x,n=3){
 #' @param link_mu function, link function used for the mean mu.
 #' @param link_sigma function, link function used for the standard deviation sigma.
 #' @param link_phi function, link function used for the autocorrelation phi.
-#' @param useApproach2 logical, if TRUE "approach 2" is used (based on center-scaled residuals), otherwise approach 1 is used
+#' @param useApproach2 logical, if TRUE "approach 2" is used (based on center-scaled residuals), otherwise approach 1 is used.
 #' @param optim_control list, list of controls to be passed to the optimizer, see ?optim.
 #' @param optim_method character string, optimization method, see ?optim.
 #' @return An object of class 'PolyRegFit', which is a list with the following components:
-#'   \item{theta}{numeric vector, estimated parameter vector},
+#'   \item{theta}{numeric vector, estimated parameter vector}
 #'   \item{coeff}{list of size 3, subvector of theta corresponding to
 #'       the polynomial coefficients for mu, sigma and phi}
 #'   \item{pred}{list of size 3, estimated mean mu, sdev sigma and autocorrelation phi (same size as y)}
 #'   \item{residuals}{numeric vector, standardized (centered-scaled) residuals (same size as y)}
+#'   \item{innovations}{numeric vector, innovations (i.e. whitened centered-scaled residuals, same size as y)}
 #'   \item{poly}{list of size 3, polynomials used to compute mu and sigma}
 #'   \item{xscaled}{list of size 3, scaled predictors for mu, sigma and phi, with scaling depending
 #'       on polyFunk (Hermite and Standard: center-scale, Legendre: send between -1 and 1)}
@@ -126,8 +127,12 @@ LegendrePolynomials <- function(x,n=3){
 #'   \item{x}{list of size 3, predictors for mu, sigma and phi}
 #'   \item{deg}{list of size 3, polynomial degree associated to each predictor for computing mu, sigma and phi}
 #'   \item{polyFunk}{function, function to compute polynomials}
+#'   \item{useApproach2}{logical, if TRUE "approach 2" is used (based on center-scaled residuals), otherwise approach 1 is used}
+#'   \item{link_mu}{function, link function used for the mean mu}
+#'   \item{link_sigma}{function, link function used for the standard deviation sigma}
+#'   \item{link_phi}{function, link function used for the autocorrelation phi}
 #' @examples
-#' n=1000
+#' n=366
 #' predictor=rnorm(n)
 #' y=rnorm(n,mean=2*sin(predictor),sd=0.1*(abs(predictor)+0.5))
 #' plot(predictor,y)
@@ -272,7 +277,7 @@ polynomialRegression <- function(y,x_mu,x_sigma=x_mu,x_phi=x_mu,
 #'
 #' Predict from a polynomial regression for both the mean, the standard deviation
 #' and the autocorrelation of a AR(1) Gaussian distribution.
-#' @param object object of class polyRegFit, resulting from a call to function [polynomialRegression()]
+#' @param object object of class polyRegFit, resulting from a call to function [polynomialRegression()].
 #' @param newdata  list of size 3 with names 'mu', 'sigma' and 'phi', predictors (matrix or data frame).
 #'     If NULL, the predictors used for calibration are used.
 #' @param nsim integer, number of replications used to compute parametric and predictive
@@ -287,8 +292,9 @@ polynomialRegression <- function(y,x_mu,x_sigma=x_mu,x_phi=x_mu,
 #'   \item{x}{list of size 3, predictors for mu, sigma and phi}
 #'   \item{xscaled}{list of size 3, scaled predictors for mu, sigma and phi}
 #'   \item{poly}{list of size 3, polynomials used to compute mu, sigma and phi}
+#'   \item{C}{matrix, covariance matrix of inferred parameters (approximated using the Hessian)}
 #' @examples
-#' n=1000
+#' n=366
 #' predictor=rnorm(n)
 #' y=rnorm(n,mean=2*sin(predictor),sd=0.1*(abs(predictor)+0.5))
 #' reg=polynomialRegression(y,predictor)
@@ -392,6 +398,7 @@ predict.polyRegFit <-function(object,newdata=NULL,nsim=1000,...){
 #' @param predictorType character string, one of 'scaled' (show rescaled predictor), 'raw' (show raw predictor)
 #'     or 'transformed' (show transformed predictor, only available when x is of class anaRes).
 #' @param alpha numeric in [0,1], transparency of uncertainty intervals.
+#' @param intervalLevel numeric in (0,1), level of the uncertainty intervals.
 #' @param ... further plotting arguments passed to or from other methods.
 #' @return A list of 4 ggplots:
 #' \enumerate{
@@ -406,7 +413,9 @@ predict.polyRegFit <-function(object,newdata=NULL,nsim=1000,...){
 #' @import ggplot2
 #' @importFrom patchwork wrap_plots plot_layout
 #' @importFrom dplyr arrange
-plot.polyRegFit <- function(x,predictorType=c('scaled','raw','transformed'),alpha=0.25,...){
+#' @importFrom stats qnorm
+plot.polyRegFit <- function(x,predictorType=c('scaled','raw','transformed'),alpha=0.25,intervalLevel=0.9,...){
+  coef=qnorm(1-(1-intervalLevel)/2)
   out=list()
   wx=match.arg(predictorType)
   whichx=switch(wx,scaled='xscaled',raw='x',transformed='xtrans')
@@ -417,7 +426,7 @@ plot.polyRegFit <- function(x,predictorType=c('scaled','raw','transformed'),alph
                 res=x$residuals,innov=x$innovations)
   g1=ggplot(DF)+
     geom_point(aes(.data$x,.data$y))+
-    geom_ribbon(aes(x=.data$x,ymin=.data$mu-1.64*.data$sigma,ymax=.data$mu+1.64*.data$sigma),
+    geom_ribbon(aes(x=.data$x,ymin=.data$mu-coef*.data$sigma,ymax=.data$mu+coef*.data$sigma),
                 fill='red',alpha=alpha)+
     geom_line(aes(.data$x,.data$mu),col='red')+
     coord_cartesian(ylim=range(DF$y,na.rm=TRUE))+
@@ -425,14 +434,14 @@ plot.polyRegFit <- function(x,predictorType=c('scaled','raw','transformed'),alph
     theme_bw()
   g2=ggplot(DF)+
     geom_point(aes(.data$x,.data$res))+
-    geom_ribbon(aes(x=.data$x,ymin=-1.64,ymax=1.64),fill='red',alpha=alpha)+
+    geom_ribbon(aes(x=.data$x,ymin=-coef,ymax=coef),fill='red',alpha=alpha)+
     geom_line(aes(x,0),col='red')+
     coord_cartesian(ylim=max(abs(DF$res),na.rm=TRUE)*c(-1,1))+
     labs(x='Index',y='Standardized residuals')+
     theme_bw()
   g3=ggplot(DF)+
     geom_point(aes(.data$x,.data$innov))+
-    geom_ribbon(aes(x=.data$x,ymin=-1.64,ymax=1.64),fill='red',alpha=alpha)+
+    geom_ribbon(aes(x=.data$x,ymin=-coef,ymax=coef),fill='red',alpha=alpha)+
     geom_line(aes(x,0),col='red')+
     coord_cartesian(ylim=max(abs(DF$innov),na.rm=TRUE)*c(-1,1))+
     labs(x='Index',y='Innovations')+
@@ -447,7 +456,7 @@ plot.polyRegFit <- function(x,predictorType=c('scaled','raw','transformed'),alph
       DF=arrange(DF,x)
       g1=ggplot(DF)+
         geom_point(aes(.data$x,.data$y))+
-        geom_ribbon(aes(x=.data$x,ymin=.data$mu-1.64*.data$sigma,ymax=.data$mu+1.64*.data$sigma),
+        geom_ribbon(aes(x=.data$x,ymin=.data$mu-coef*.data$sigma,ymax=.data$mu+coef*.data$sigma),
                     fill='red',alpha=alpha)+
         geom_line(aes(.data$x,.data$mu),col='red')+
         coord_cartesian(ylim=range(DF$y,na.rm=TRUE))+
@@ -464,7 +473,7 @@ plot.polyRegFit <- function(x,predictorType=c('scaled','raw','transformed'),alph
       }
       g3=ggplot(DF)+
         geom_point(aes(.data$x,.data$res))+
-        geom_ribbon(aes(x=.data$x,ymin=-1.64,ymax=1.64),fill='red',alpha=alpha)+
+        geom_ribbon(aes(x=.data$x,ymin=-coef,ymax=coef),fill='red',alpha=alpha)+
         geom_line(aes(x,0),col='red')+
         coord_cartesian(ylim=max(abs(DF$res),na.rm=TRUE)*c(-1,1))+
         labs(x=xnames[i],y='Standardized residuals')+
@@ -482,6 +491,7 @@ plot.polyRegFit <- function(x,predictorType=c('scaled','raw','transformed'),alph
 #' @param x object of class polyRegPred, resulting from a call to function [predict.polyRegFit()]
 #' @param predictorType character string, one of 'scaled' (show rescaled predictor), 'raw' (show raw predictor)
 #'     or 'transformed' (show transformed predictor, only available when x is of class anaResPred).
+#' @param intervalLevel numeric in (0,1), level of the uncertainty intervals.
 #' @param ... further plotting arguments passed to or from other methods.
 #' @return A list of 3 ggplots:
 #' \enumerate{
@@ -495,11 +505,12 @@ plot.polyRegFit <- function(x,predictorType=c('scaled','raw','transformed'),alph
 #' @import ggplot2
 #' @importFrom patchwork wrap_plots plot_layout
 #' @importFrom dplyr arrange
-#' @importFrom stats quantile
-plot.polyRegPred <- function(x,predictorType=c('scaled','raw','transformed'),...){
+#' @importFrom stats quantile qnorm
+plot.polyRegPred <- function(x,predictorType=c('scaled','raw','transformed'),intervalLevel=0.9,...){
   out=list()
+  prob=(1-intervalLevel)/2
   # Predictive
-  foo=apply(x$predictive,2,quantile,probs=c(0.025,0.5,0.975))
+  foo=apply(x$predictive,2,quantile,probs=c(prob,0.5,1-prob))
   DF=data.frame(med=foo[2,],low=foo[1,],high=foo[3,],x=1:NCOL(foo))
   g=ggplot(DF)+
     geom_ribbon(aes(x=.data$x,ymin=.data$low,ymax=.data$high),fill='red',alpha=0.5)+
@@ -515,12 +526,12 @@ plot.polyRegPred <- function(x,predictorType=c('scaled','raw','transformed'),...
     if(is.null(x$pred[[what]])){
       high=low=x$pred[[what]]
       pred_med=x$pred[['mu']]
-      pred_low=pred_med-1.64*x$pred[['sigma']]
-      pred_high=pred_med+1.64*x$pred[['sigma']]
+      pred_low=pred_med+qnorm(prob)*x$pred[['sigma']]
+      pred_high=pred_med+qnorm(1-prob)*x$pred[['sigma']]
     } else {
-      foo=apply(x$replicates[[what]],2,quantile,probs=c(0.025,0.975))
+      foo=apply(x$replicates[[what]],2,quantile,probs=c(prob,1-prob))
       low=foo[1,];high=foo[2,]
-      foo=apply(x$predictive,2,quantile,probs=c(0.025,0.5,0.975))
+      foo=apply(x$predictive,2,quantile,probs=c(prob,0.5,1-prob))
       pred_low=foo[1,];pred_med=foo[2,];pred_high=foo[3,]
     }
     DF=data.frame(par=x$pred[[what]],low=low,high=high,

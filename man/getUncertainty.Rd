@@ -9,8 +9,8 @@ getUncertainty(
   sim = object$sim,
   x = list(mu = data.frame(sim = sim), sigma = data.frame(sim = sim), phi =
     data.frame(dsim = c(0, diff(sim)))),
-  nsim = 1000,
-  probs = c(0.05, 0.5, 0.95),
+  nrep = 1000,
+  intervalLevel = 0.9,
   ...
 )
 }
@@ -21,26 +21,25 @@ getUncertainty(
 
 \item{x}{list of size 3 with names 'mu', 'sigma' and 'phi', predictors (matrix or data frame).}
 
-\item{nsim}{integer, number of replications used to compute parametric and predictive
-uncertainties. Uncertainties are skipped if nsim<=0}
+\item{nrep}{integer, number of replications used to compute parametric and predictive
+uncertainties.}
 
-\item{probs}{numeric vector of length 3, probabilities used to compute the low/middle/high bounds of uncertainty envelops}
+\item{intervalLevel}{numeric in (0,1), level of the uncertainty intervals.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-An object of class 'PredictiveU', which is a list with the following components:
-  \item{XXX}{XXX}
+An object of class 'PredictiveU', which is an object of class 'polyRegPred'
+    augmented with the following components:
+  \item{sim}{numeric vector, simulated values}
+  \item{spag}{numeric matrix, size nrep*length(sim): replications representing predictive uncertainty}
+  \item{env}{data frame, with columns 'median' (predictive median) and 'low' + 'high' (predictive uncertainty envelope). }
 }
 \description{
 Compute predictive uncertainty around simulated values, after having performed a residual analysis.
 }
 \examples{
-q=as.numeric(Nile)
-obs=0.1*q^(3/5)+rnorm(length(q),sd=0.2)
-sim=0.11*q^(3.1/5)
-plot(sim,type='l');points(obs)
-w=analyseResiduals(obs,sim)
-u=getUncertainty(w)
-plot(u)
+w=analyseResiduals(ArdecheRiver$obs[1:366],ArdecheRiver$sim[1:366])
+u=getUncertainty(w,sim=ArdecheRiver$sim[367:731])
+plot(u,axisValues=ArdecheRiver$date[367:731])
 }

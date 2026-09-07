@@ -18,9 +18,6 @@ a numeric value equal to the NSE
 Compute the Nash-Sutcliffe Efficiency (NSE)
 }
 \examples{
-n=50
-obs=rnorm(n,0,4)
-sim=obs+rnorm(n,1,1)
-NSE(obs,sim)
-plot(obs);lines(sim)
+NSE(ArdecheRiver$obs,ArdecheRiver$sim)
+plot(ArdecheRiver$obs);lines(ArdecheRiver$sim,col='red')
 }

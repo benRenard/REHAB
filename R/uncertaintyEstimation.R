@@ -14,7 +14,7 @@
 #' @param x_sigma numeric vector, matrix or data frame, predictors for the sdev sigma.
 #' @param x_phi numeric vector, matrix or data frame, predictors for the autocorrelation phi.
 #' @param polyFunk function, function used to compute predictor polynomials.
-#' @param trans character string, predictor transformation one of c('uniform','normal','none').
+#' @param trans character string, predictor transformation, one of c('uniform','normal','none').
 #' @param deg_mu Integer vector, size NCOL(x_mu). Polynomial degree of each predictor
 #'    used to compute the mean. Trick: passing a single value as a character will force
 #'    mu to remain equal to this value.
@@ -24,21 +24,16 @@
 #' @param deg_phi integer vector, size NCOL(x_phi). Polynomial degree of each predictor
 #'    used to compute the autocorrelation. Trick: passing a single value as a character will force
 #'    phi to remain equal to this value.
-#' @param ... additional arguments passed to function [polynomialRegression]()
+#' @param ... additional arguments passed to function [polynomialRegression()]
 #' @return An object of class 'anaRes', which is an object of class 'polyRegFit'
 #'     augmented with the following components:
 #'   \item{obs}{numeric vector, observed values}
 #'   \item{sim}{numeric vector, simulated values}
 #'   \item{xtrans}{list of size 3, transformed predictors for mu, sigma and phi}
-#'   \item{xtrans}{list of size 3, transformed predictors for mu, sigma and phi}
 #'   \item{trans}{list of size 3, each element being a list of functions:
 #'       transformation function used for each predictor (column) in x_mu, x_sigma and x_phi}
 #' @examples
-#' q=as.numeric(Nile)
-#' obs=0.1*q^(3/5)+rnorm(length(q),sd=0.2)
-#' sim=0.11*q^(3.1/5)
-#' plot(sim,type='l');points(obs)
-#' w=analyseResiduals(obs,sim)
+#' w=analyseResiduals(ArdecheRiver$obs,ArdecheRiver$sim)
 #' plot(w)
 #' @export
 analyseResiduals <- function(obs,sim,
@@ -77,9 +72,9 @@ analyseResiduals <- function(obs,sim,
 #'
 #' Plot results of a residual analysis.
 #' @param x object of class 'anaRes', resulting from a call to function [analyseResiduals()]
-#' @param predictorType character string, one of 'transformed' (show transformed X), 'raw' (show raw X)
-#'     or 'scaled' (show rescaled X).
-#' @param alpha numeric in [0,1], transparency of uncertainty interval
+#' @param predictorType character string, one of 'transformed' (show transformed predictors),
+#'     'raw' (show raw predictors) or 'scaled' (show rescaled predictors).
+#' @param alpha numeric in [0,1], transparency of uncertainty interval.
 #' @param allPlots, boolean, produce all plots or only the obs vs. sim one?
 #' @param ... further plotting arguments passed to or from other methods.
 #' @return A list of 4 ggplots (if allPlots=FALSE, only the first one is returned):
@@ -96,8 +91,7 @@ analyseResiduals <- function(obs,sim,
 plot.anaRes <- function(x,
                         predictorType=c('transformed','raw','scaled'),
                         alpha=0.25,allPlots=FALSE,...){
-  foo=match.arg(predictorType)
-  xt=switch(foo,scaled='xscaled',raw='x',transformed='xtrans')
+  xt=match.arg(predictorType)
   if(allPlots){
     out=plot.polyRegFit(x,predictorType=xt,alpha=alpha,...)
   } else {
@@ -125,27 +119,26 @@ plot.anaRes <- function(x,
 #' @param object object of class anaRes, resulting from a call to function [analyseResiduals()]
 #' @param sim numeric vector, simulated values
 #' @param x  list of size 3 with names 'mu', 'sigma' and 'phi', predictors (matrix or data frame).
-#' @param nsim integer, number of replications used to compute parametric and predictive
-#'     uncertainties. Uncertainties are skipped if nsim<=0
-#' @param probs numeric vector of length 3, probabilities used to compute the low/middle/high bounds of uncertainty envelops
+#' @param nrep integer, number of replications used to compute parametric and predictive
+#'     uncertainties.
+#' @param intervalLevel numeric in (0,1), level of the uncertainty intervals.
 #' @param ... further arguments passed to or from other methods.
-#' @return An object of class 'PredictiveU', which is a list with the following components:
-#'   \item{XXX}{XXX}
+#' @return An object of class 'PredictiveU', which is an object of class 'polyRegPred'
+#'     augmented with the following components:
+#'   \item{sim}{numeric vector, simulated values}
+#'   \item{spag}{numeric matrix, size nrep*length(sim): replications representing predictive uncertainty}
+#'   \item{env}{data frame, with columns 'median' (predictive median) and 'low' + 'high' (predictive uncertainty envelope). }
 #' @examples
-#' q=as.numeric(Nile)
-#' obs=0.1*q^(3/5)+rnorm(length(q),sd=0.2)
-#' sim=0.11*q^(3.1/5)
-#' plot(sim,type='l');points(obs)
-#' w=analyseResiduals(obs,sim)
-#' u=getUncertainty(w)
-#' plot(u)
+#' w=analyseResiduals(ArdecheRiver$obs[1:366],ArdecheRiver$sim[1:366])
+#' u=getUncertainty(w,sim=ArdecheRiver$sim[367:731])
+#' plot(u,axisValues=ArdecheRiver$date[367:731])
 #' @export
 #' @importFrom stats quantile
 getUncertainty <-function(object,sim=object$sim,
                           x=list(mu=data.frame(sim=sim),
                                  sigma=data.frame(sim=sim),
                                  phi=data.frame(dsim=c(0,diff(sim)))),
-                          nsim=1000,probs=c(0.05,0.5,0.95),...){
+                          nrep=1000,intervalLevel=0.9,...){
   # Transform x and predict
   tx=x
   for(i in 1:length(x)){
@@ -153,10 +146,11 @@ getUncertainty <-function(object,sim=object$sim,
       tx[[i]][,j]=object$trans[[i]][[j]](x[[i]][,j])
     }
   }
-  out=predict.polyRegFit(object,tx,nsim,...)
+  out=predict.polyRegFit(object,tx,nrep,...)
   # Complete prediction object
   out$sim=sim
   out$spag=rep(sim,each=NROW(out$predictive))+out$predictive
+  probs=c((1-intervalLevel)/2,0.5,1-(1-intervalLevel)/2)
   foo=apply(out$spag,2,quantile,probs=probs)
   env=data.frame(t(foo)[,c(2,1,3)])
   names(env) <- c('median','low','high')
@@ -182,7 +176,7 @@ getUncertainty <-function(object,sim=object$sim,
 #' @importFrom stats quantile
 plot.predictiveUncertainty <- function(x,
                                        axisValues=data.frame(Index=1:NROW(x$sim)),
-                                       labs=c(names(axisValues),'Prediction'),
+                                       labs=c(ifelse(is.null(names(axisValues)),' ',names(axisValues)),'Prediction'),
                                        col='red',alpha=0.25,showRawSim=TRUE,...){
   DF=cbind(x$env,x=as.data.frame(axisValues)[,1],sim=x$sim)
   col='red'

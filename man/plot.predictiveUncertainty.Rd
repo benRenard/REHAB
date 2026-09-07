@@ -7,7 +7,7 @@
 \method{plot}{predictiveUncertainty}(
   x,
   axisValues = data.frame(Index = 1:NROW(x$sim)),
-  labs = c(names(axisValues), "Prediction"),
+  labs = c(ifelse(is.null(names(axisValues)), " ", names(axisValues)), "Prediction"),
   col = "red",
   alpha = 0.25,
   showRawSim = TRUE,
@@ -36,11 +36,7 @@ A ggplot showing the simulated values + uncertainties
 Plot predictive uncertainty estimated after a residual analysis.
 }
 \examples{
-q=as.numeric(Nile)
-obs=0.1*q^(3/5)+rnorm(length(q),sd=0.2)
-sim=0.11*q^(3.1/5)
-plot(sim,type='l');points(obs)
-w=analyseResiduals(obs,sim)
-u=getUncertainty(w)
-plot(u)
+w=analyseResiduals(ArdecheRiver$obs[1:366],ArdecheRiver$sim[1:366])
+u=getUncertainty(w,sim=ArdecheRiver$sim[367:731])
+plot(u,axisValues=ArdecheRiver$date[367:731])
 }

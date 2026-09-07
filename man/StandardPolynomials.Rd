@@ -21,6 +21,6 @@ Compute standard Polynomials (i.e. monomials) from degree 0 up to degree n
 \examples{
 x=seq(-1,1,0.01)
 DF=StandardPolynomials(x,5)
-plot(NA,xlab='x',ylab='Hn(x)',xlim=range(x),ylim=range(DF))
+plot(NA,xlab='x',ylab='Pn(x)',xlim=range(x),ylim=range(DF))
 for(i in 1:NCOL(DF)){lines(x,DF[,i],col=i)}
 }

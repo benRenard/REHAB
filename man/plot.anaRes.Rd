@@ -15,10 +15,10 @@
 \arguments{
 \item{x}{object of class 'anaRes', resulting from a call to function [analyseResiduals()]}
 
-\item{predictorType}{character string, one of 'transformed' (show transformed X), 'raw' (show raw X)
-or 'scaled' (show rescaled X).}
+\item{predictorType}{character string, one of 'transformed' (show transformed predictors),
+'raw' (show raw predictors) or 'scaled' (show rescaled predictors).}
 
-\item{alpha}{numeric in [0,1], transparency of uncertainty interval}
+\item{alpha}{numeric in [0,1], transparency of uncertainty interval.}
 
 \item{allPlots, }{boolean, produce all plots or only the obs vs. sim one?}
 
@@ -38,10 +38,6 @@ A list of 4 ggplots (if allPlots=FALSE, only the first one is returned):
 Plot results of a residual analysis.
 }
 \examples{
-q=as.numeric(Nile)
-obs=0.1*q^(3/5)+rnorm(length(q),sd=0.2)
-sim=0.11*q^(3.1/5)
-plot(sim,type='l');points(obs)
-w=analyseResiduals(obs,sim)
+w=analyseResiduals(ArdecheRiver$obs,ArdecheRiver$sim)
 plot(w)
 }

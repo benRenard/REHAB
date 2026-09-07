@@ -50,7 +50,7 @@ phi to remain equal to this value.}
 
 \item{link_phi}{function, link function used for the autocorrelation phi.}
 
-\item{useApproach2}{logical, if TRUE "approach 2" is used (based on center-scaled residuals), otherwise approach 1 is used}
+\item{useApproach2}{logical, if TRUE "approach 2" is used (based on center-scaled residuals), otherwise approach 1 is used.}
 
 \item{optim_control}{list, list of controls to be passed to the optimizer, see ?optim.}
 
@@ -58,11 +58,12 @@ phi to remain equal to this value.}
 }
 \value{
 An object of class 'PolyRegFit', which is a list with the following components:
-  \item{theta}{numeric vector, estimated parameter vector},
+  \item{theta}{numeric vector, estimated parameter vector}
   \item{coeff}{list of size 3, subvector of theta corresponding to
       the polynomial coefficients for mu, sigma and phi}
   \item{pred}{list of size 3, estimated mean mu, sdev sigma and autocorrelation phi (same size as y)}
   \item{residuals}{numeric vector, standardized (centered-scaled) residuals (same size as y)}
+  \item{innovations}{numeric vector, innovations (i.e. whitened centered-scaled residuals, same size as y)}
   \item{poly}{list of size 3, polynomials used to compute mu and sigma}
   \item{xscaled}{list of size 3, scaled predictors for mu, sigma and phi, with scaling depending
       on polyFunk (Hermite and Standard: center-scale, Legendre: send between -1 and 1)}
@@ -76,13 +77,17 @@ An object of class 'PolyRegFit', which is a list with the following components:
   \item{x}{list of size 3, predictors for mu, sigma and phi}
   \item{deg}{list of size 3, polynomial degree associated to each predictor for computing mu, sigma and phi}
   \item{polyFunk}{function, function to compute polynomials}
+  \item{useApproach2}{logical, if TRUE "approach 2" is used (based on center-scaled residuals), otherwise approach 1 is used}
+  \item{link_mu}{function, link function used for the mean mu}
+  \item{link_sigma}{function, link function used for the standard deviation sigma}
+  \item{link_phi}{function, link function used for the autocorrelation phi}
 }
 \description{
 Fit a polynomial regression for the mean mu, the standard deviation sigma
-and the autocorrelation phi an AR(1) a Gaussian distribution
+and the autocorrelation phi of an AR(1) Gaussian distribution
 }
 \examples{
-n=1000
+n=366
 predictor=rnorm(n)
 y=rnorm(n,mean=2*sin(predictor),sd=0.1*(abs(predictor)+0.5))
 plot(predictor,y)

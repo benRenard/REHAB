@@ -61,11 +61,8 @@ getTransform <- function(values,trans=c('none','normal','uniform')){
 #' @param sim numeric vector, simulated values
 #' @return a numeric value equal to the NSE
 #' @examples
-#' n=50
-#' obs=rnorm(n,0,4)
-#' sim=obs+rnorm(n,1,1)
-#' NSE(obs,sim)
-#' plot(obs);lines(sim)
+#' NSE(ArdecheRiver$obs,ArdecheRiver$sim)
+#' plot(ArdecheRiver$obs);lines(ArdecheRiver$sim,col='red')
 #' @export
 NSE <- function(obs,sim){
   num=sum((obs-sim)^2,na.rm=TRUE)

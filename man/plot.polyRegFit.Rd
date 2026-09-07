@@ -4,7 +4,13 @@
 \alias{plot.polyRegFit}
 \title{Plot Polynomial Regression}
 \usage{
-\method{plot}{polyRegFit}(x, predictorType = c("scaled", "raw", "transformed"), alpha = 0.25, ...)
+\method{plot}{polyRegFit}(
+  x,
+  predictorType = c("scaled", "raw", "transformed"),
+  alpha = 0.25,
+  intervalLevel = 0.9,
+  ...
+)
 }
 \arguments{
 \item{x}{object of class polyRegFit, resulting from a call to function [polynomialRegression()]}
@@ -13,6 +19,8 @@
 or 'transformed' (show transformed predictor, only available when x is of class anaRes).}
 
 \item{alpha}{numeric in [0,1], transparency of uncertainty intervals.}
+
+\item{intervalLevel}{numeric in (0,1), level of the uncertainty intervals.}
 
 \item{...}{further plotting arguments passed to or from other methods.}
 }
@@ -30,7 +38,7 @@ A list of 4 ggplots:
 Plot results of a polynomial regression.
 }
 \examples{
-n=1000
+n=366
 predictor=rnorm(n)
 y=rnorm(n,mean=2*sin(predictor),sd=0.1*(abs(predictor)+0.5))
 plot(predictor,y)

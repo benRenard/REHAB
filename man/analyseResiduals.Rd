@@ -31,7 +31,7 @@ analyseResiduals(
 
 \item{polyFunk}{function, function used to compute predictor polynomials.}
 
-\item{trans}{character string, predictor transformation one of c('uniform','normal','none').}
+\item{trans}{character string, predictor transformation, one of c('uniform','normal','none').}
 
 \item{deg_mu}{Integer vector, size NCOL(x_mu). Polynomial degree of each predictor
 used to compute the mean. Trick: passing a single value as a character will force
@@ -45,14 +45,13 @@ sigma to remain equal to this value.}
 used to compute the autocorrelation. Trick: passing a single value as a character will force
 phi to remain equal to this value.}
 
-\item{...}{additional arguments passed to function [polynomialRegression]()}
+\item{...}{additional arguments passed to function [polynomialRegression()]}
 }
 \value{
 An object of class 'anaRes', which is an object of class 'polyRegFit'
     augmented with the following components:
   \item{obs}{numeric vector, observed values}
   \item{sim}{numeric vector, simulated values}
-  \item{xtrans}{list of size 3, transformed predictors for mu, sigma and phi}
   \item{xtrans}{list of size 3, transformed predictors for mu, sigma and phi}
   \item{trans}{list of size 3, each element being a list of functions:
       transformation function used for each predictor (column) in x_mu, x_sigma and x_phi}
@@ -64,10 +63,6 @@ whose mean mu, standard deviation sigma and lag-1 autocorrelation phi
 vary according to polynomial regressions with predictors.
 }
 \examples{
-q=as.numeric(Nile)
-obs=0.1*q^(3/5)+rnorm(length(q),sd=0.2)
-sim=0.11*q^(3.1/5)
-plot(sim,type='l');points(obs)
-w=analyseResiduals(obs,sim)
+w=analyseResiduals(ArdecheRiver$obs,ArdecheRiver$sim)
 plot(w)
 }

@@ -4,13 +4,20 @@
 \alias{plot.polyRegPred}
 \title{Plot Polynomial Regression Prediction}
 \usage{
-\method{plot}{polyRegPred}(x, predictorType = c("scaled", "raw", "transformed"), ...)
+\method{plot}{polyRegPred}(
+  x,
+  predictorType = c("scaled", "raw", "transformed"),
+  intervalLevel = 0.9,
+  ...
+)
 }
 \arguments{
 \item{x}{object of class polyRegPred, resulting from a call to function [predict.polyRegFit()]}
 
 \item{predictorType}{character string, one of 'scaled' (show rescaled predictor), 'raw' (show raw predictor)
 or 'transformed' (show transformed predictor, only available when x is of class anaResPred).}
+
+\item{intervalLevel}{numeric in (0,1), level of the uncertainty intervals.}
 
 \item{...}{further plotting arguments passed to or from other methods.}
 }
@@ -27,7 +34,7 @@ A list of 3 ggplots:
 Plot prediction from a fitted polynomial regression.
 }
 \examples{
-n=1000
+n=366
 predictor=rnorm(n)
 y=rnorm(n,mean=2*sin(predictor),sd=0.1*(abs(predictor)+0.5))
 reg=polynomialRegression(y,predictor)

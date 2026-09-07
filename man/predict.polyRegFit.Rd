@@ -7,7 +7,7 @@
 \method{predict}{polyRegFit}(object, newdata = NULL, nsim = 1000, ...)
 }
 \arguments{
-\item{object}{object of class polyRegFit, resulting from a call to function [polynomialRegression()]}
+\item{object}{object of class polyRegFit, resulting from a call to function [polynomialRegression()].}
 
 \item{newdata}{list of size 3 with names 'mu', 'sigma' and 'phi', predictors (matrix or data frame).
 If NULL, the predictors used for calibration are used.}
@@ -27,13 +27,14 @@ An object of class 'PolyRegPred', which is a list with the following components:
   \item{x}{list of size 3, predictors for mu, sigma and phi}
   \item{xscaled}{list of size 3, scaled predictors for mu, sigma and phi}
   \item{poly}{list of size 3, polynomials used to compute mu, sigma and phi}
+  \item{C}{matrix, covariance matrix of inferred parameters (approximated using the Hessian)}
 }
 \description{
 Predict from a polynomial regression for both the mean, the standard deviation
 and the autocorrelation of a AR(1) Gaussian distribution.
 }
 \examples{
-n=1000
+n=366
 predictor=rnorm(n)
 y=rnorm(n,mean=2*sin(predictor),sd=0.1*(abs(predictor)+0.5))
 reg=polynomialRegression(y,predictor)
