@@ -38,6 +38,6 @@ A list of 4 ggplots (if allPlots=FALSE, only the first one is returned):
 Plot results of a residual analysis.
 }
 \examples{
-w=analyseResiduals(ArdecheRiver$obs,ArdecheRiver$sim)
+w=analyseResiduals(ArdecheRiver$obs[1:366],ArdecheRiver$sim[1:366])
 plot(w)
 }

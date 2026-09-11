@@ -33,7 +33,7 @@
 #'   \item{trans}{list of size 3, each element being a list of functions:
 #'       transformation function used for each predictor (column) in x_mu, x_sigma and x_phi}
 #' @examples
-#' w=analyseResiduals(ArdecheRiver$obs,ArdecheRiver$sim)
+#' w=analyseResiduals(ArdecheRiver$obs[1:366],ArdecheRiver$sim[1:366])
 #' plot(w)
 #' @export
 analyseResiduals <- function(obs,sim,
@@ -100,14 +100,18 @@ plot.anaRes <- function(x,
   # Add a obs vs. sim plot
   DF=data.frame(x=1:NROW(x$sim),sim=x$sim,obs=x$obs,mu=x$pred$mu,sigma=x$pred$sigma)
   g=ggplot(DF)+
-    geom_point(aes(.data$x,.data$obs))+
-    geom_ribbon(aes(x=.data$x,ymin=.data$sim+.data$mu-1.64*.data$sigma,ymax=.data$sim+.data$mu+1.64*.data$sigma),
-                fill='red',alpha=alpha)+
-    geom_line(aes(.data$x,.data$sim+.data$mu),col='red')+
-    geom_line(aes(.data$x,.data$sim),col='gray')+
+    geom_point(aes(.data$x,.data$obs,color='obs'))+
+    geom_ribbon(aes(x=.data$x,ymin=.data$sim+.data$mu-1.64*.data$sigma,ymax=.data$sim+.data$mu+1.64*.data$sigma,
+                    fill='UI'),alpha=alpha)+
+    geom_line(aes(.data$x,.data$sim+.data$mu,col='cor'))+
+    geom_line(aes(.data$x,.data$sim,col='sim'))+
     coord_cartesian(ylim=range(c(DF$sim,DF$obs),na.rm=TRUE))+
     labs(x='Index',y='Obs. vs. predicted')+
-    theme_bw()
+    scale_fill_manual('',values=c(UI='red'),labels=c(UI='Uncertainty'))+
+    scale_color_manual('',values=c(obs='black',sim='gray',cor='red'),
+                       labels=c(obs='Obs.',sim='Sim. (raw)',cor='Sim. (bias-corrected)'),
+                       limits=c('obs','sim','cor'))+
+    theme_bw()+theme(legend.position='top')
   out[[1]]=g
   names(out)[1] <- 'ObsVsSim'
   return(out)
@@ -129,9 +133,9 @@ plot.anaRes <- function(x,
 #'   \item{spag}{numeric matrix, size nrep*length(sim): replications representing predictive uncertainty}
 #'   \item{env}{data frame, with columns 'median' (predictive median) and 'low' + 'high' (predictive uncertainty envelope). }
 #' @examples
-#' w=analyseResiduals(ArdecheRiver$obs[1:366],ArdecheRiver$sim[1:366])
-#' u=getUncertainty(w,sim=ArdecheRiver$sim[367:731])
-#' plot(u,axisValues=ArdecheRiver$date[367:731])
+#' w=analyseResiduals(ArdecheRiver$obs[1:365],ArdecheRiver$sim[1:365])
+#' u=getUncertainty(w,sim=ArdecheRiver$sim[366:730])
+#' plot(u,axisValues=ArdecheRiver$date[366:730])
 #' @export
 #' @importFrom stats quantile
 getUncertainty <-function(object,sim=object$sim,
@@ -179,12 +183,23 @@ plot.predictiveUncertainty <- function(x,
                                        labs=c(ifelse(is.null(names(axisValues)),' ',names(axisValues)),'Prediction'),
                                        col='red',alpha=0.25,showRawSim=TRUE,...){
   DF=cbind(x$env,x=as.data.frame(axisValues)[,1],sim=x$sim)
-  col='red'
   out=ggplot(DF,aes(x=.data$x))+
-    geom_ribbon(aes(ymin=.data$low,ymax=.data$high),fill=col,alpha=alpha)+
-    geom_line(aes(y=.data$median),color=col)+
-    labs(x=labs[1],y=labs[2])+
-    theme_bw()
-  if(showRawSim){out=out+geom_line(aes(y=.data$sim))}
+    geom_ribbon(aes(ymin=.data$low,ymax=.data$high,fill='UI'),alpha=alpha)+
+    geom_line(aes(y=.data$median,color='cor'))+
+    labs(x=labs[1],y=labs[2])
+  if(showRawSim){
+    out=out+geom_line(aes(y=.data$sim,color='sim'))
+    values=c(cor='red',sim='black')
+    labels=c(sim='Sim. (raw)',cor='Sim. (bias-corrected)')
+    limits=c('sim','cor')
+  } else {
+    values=c(cor='red')
+    labels=c(cor='Sim. (bias-corrected)')
+    limits=c('cor')
+  }
+  out=out+
+    scale_fill_manual('',values=c(UI='red'),labels=c(UI='Uncertainty'))+
+    scale_color_manual('',values=values,labels=labels,limits=limits)+
+    theme_bw()+theme(legend.position='top')
   return(out)
 }

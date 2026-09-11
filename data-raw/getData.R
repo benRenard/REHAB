@@ -18,7 +18,7 @@ output <- RunModel(InputsModel = inputs,
                    FUN_MOD = RunModel_GR4J)
 
 ArdecheRiver=data.frame(date=dates,obs=Qobs,sim=output$Qsim) %>%
-  filter(between(date,as.Date('2003-09-01'),as.Date('2005-08-31')))
+  filter(between(date,as.Date('1998-09-01'),as.Date('2008-08-31')))
 plot(ArdecheRiver$date,ArdecheRiver$obs,log='y')
 lines(ArdecheRiver$date,ArdecheRiver$sim,col='red')
 plot(log(ArdecheRiver$sim),ArdecheRiver$obs-ArdecheRiver$sim)

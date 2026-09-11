@@ -63,6 +63,6 @@ whose mean mu, standard deviation sigma and lag-1 autocorrelation phi
 vary according to polynomial regressions with predictors.
 }
 \examples{
-w=analyseResiduals(ArdecheRiver$obs,ArdecheRiver$sim)
+w=analyseResiduals(ArdecheRiver$obs[1:366],ArdecheRiver$sim[1:366])
 plot(w)
 }

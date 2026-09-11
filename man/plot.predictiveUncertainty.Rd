@@ -36,7 +36,7 @@ A ggplot showing the simulated values + uncertainties
 Plot predictive uncertainty estimated after a residual analysis.
 }
 \examples{
-w=analyseResiduals(ArdecheRiver$obs[1:366],ArdecheRiver$sim[1:366])
-u=getUncertainty(w,sim=ArdecheRiver$sim[367:731])
-plot(u,axisValues=ArdecheRiver$date[367:731])
+w=analyseResiduals(ArdecheRiver$obs[1:365],ArdecheRiver$sim[1:365])
+u=getUncertainty(w,sim=ArdecheRiver$sim[366:730])
+plot(u,axisValues=ArdecheRiver$date[366:730])
 }
